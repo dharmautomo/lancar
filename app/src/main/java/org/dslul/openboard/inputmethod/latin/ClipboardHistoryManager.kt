@@ -98,7 +98,7 @@ class ClipboardHistoryManager(
     }
 
     private fun checkClipRetentionElapsed() {
-        val mins = latinIME.mSettings.current.mClipboardHistoryRetentionTime
+        val mins = latinIME.mSettings.current?.mClipboardHistoryRetentionTime ?: 0
         if (mins <= 0) return // No retention limit
         val maxClipRetentionTime = mins * 60 * 1000L
         val now = System.currentTimeMillis()

@@ -41,15 +41,18 @@ public class MoreKeysResources {
     private static final String EMPTY_STRING_VAR = "EMPTY";
 
     private final JarFile mJar;
-    // String resources maps sorted by its language. The language is determined from the jar entry
+    // String resources maps sorted by its language. The language is determined from
+    // the jar entry
     // name by calling {@link JarUtils#getLocaleFromEntryName(String)}.
     private final TreeMap<String, StringResourceMap> mResourcesMap = new TreeMap<>();
     // Default string resources map.
     private final StringResourceMap mDefaultResourceMap;
-    // Histogram of string resource names. This is used to sort {@link #mSortedResourceNames}.
+    // Histogram of string resource names. This is used to sort {@link
+    // #mSortedResourceNames}.
     private final HashMap<String, Integer> mNameHistogram = new HashMap<>();
     // Sorted string resource names array; Descending order of histogram count.
-    // The string resource name is specified as an attribute "name" in string resource files.
+    // The string resource name is specified as an attribute "name" in string
+    // resource files.
     // The string resource can be accessed by specifying name "!text/<name>"
     // via {@link KeyboardTextsSet#getText(String)}.
     private final String[] mSortedResourceNames;
@@ -75,7 +78,8 @@ public class MoreKeysResources {
         // Make name histogram.
         for (final String locale : mResourcesMap.keySet()) {
             final StringResourceMap resMap = mResourcesMap.get(locale);
-            if (resMap == mDefaultResourceMap) continue;
+            if (resMap == mDefaultResourceMap)
+                continue;
             for (final StringResource res : resMap.getResources()) {
                 if (!mDefaultResourceMap.contains(res.mName)) {
                     throw new RuntimeException(res.mName + " in " + locale
@@ -92,11 +96,11 @@ public class MoreKeysResources {
                 final int leftCount = nameHistogram.get(leftName);
                 final int rightCount = nameHistogram.get(rightName);
                 // Descending order of histogram count.
-                if (leftCount > rightCount) return -1;
-                if (leftCount < rightCount) return 1;
-                // TODO: Add further criteria to order the same histogram value names to be able to
-                // minimize footprints of string resources arrays.
-                return 0;
+                if (leftCount > rightCount)
+                    return -1;
+                if (leftCount < rightCount)
+                    return 1;
+                return leftName.compareTo(rightName);
             }
         });
         mSortedResourceNames = resourceNamesList.toArray(new String[resourceNamesList.size()]);
@@ -173,7 +177,8 @@ public class MoreKeysResources {
     private void dumpTexts(final PrintStream out) {
         for (final StringResourceMap resMap : mResourcesMap.values()) {
             final Locale locale = resMap.mLocale;
-            if (resMap == mDefaultResourceMap) continue;
+            if (resMap == mDefaultResourceMap)
+                continue;
             out.format("    /* Locale %s: %s */\n",
                     locale, LocaleUtils.getLocaleDisplayName(locale));
             out.format("    private static final String[] " + getArrayNameForLocale(locale)
@@ -199,18 +204,24 @@ public class MoreKeysResources {
     }
 
     private int dumpTextsInternal(final PrintStream out, final StringResourceMap resMap) {
-        final ArrayInitializerFormatter formatter =
-                new ArrayInitializerFormatter(out, 100, "        ", mSortedResourceNames);
+        final ArrayInitializerFormatter formatter = new ArrayInitializerFormatter(out, 100, "        ",
+                mSortedResourceNames);
         int outputArraySize = 0;
         boolean successiveNull = false;
         final int namesCount = mSortedResourceNames.length;
         for (int index = 0; index < namesCount; index++) {
             final String name = mSortedResourceNames[index];
             final StringResource res = resMap.get(name);
-            if (res != null) {
-                // TODO: Check whether the resource value is equal to the default.
+            // Optimization: If the resource value is equal to the default, we can skip it.
+            // {@link KeyboardTextsTable#getText(String,String[])} will fall back to the
+            // default value.
+            final boolean isSameAsDefault = (resMap != mDefaultResourceMap)
+                    && mDefaultResourceMap.contains(name)
+                    && res != null
+                    && res.mValue.equals(mDefaultResourceMap.get(name).mValue);
+            if (res != null && !isSameAsDefault) {
                 if (res.mComment != null) {
-                    formatter.outCommentLines(addPrefix("        // ", res. mComment));
+                    formatter.outCommentLines(addPrefix("        // ", res.mComment));
                 }
                 final String escaped = escapeNonAscii(res.mValue);
                 if (escaped.length() == 0) {
@@ -247,7 +258,7 @@ public class MoreKeysResources {
             if (c >= ' ' && c < 0x7f) {
                 sb.append(c);
             } else {
-                sb.append(String.format("\\u%04X", (int)c));
+                sb.append(String.format("\\u%04X", (int) c));
             }
         }
         return sb.toString();

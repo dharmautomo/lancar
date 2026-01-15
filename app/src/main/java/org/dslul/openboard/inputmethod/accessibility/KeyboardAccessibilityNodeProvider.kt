@@ -272,7 +272,7 @@ class KeyboardAccessibilityNodeProvider<KV : KeyboardView?>(keyboardView: KV,
         val currentSettings = Settings.getInstance().current
         val keyCodeDescription = mKeyCodeDescriptionMapper.getDescriptionForKey(
                 mKeyboardView!!.context, mKeyboard, key, shouldObscure)
-        return if (currentSettings.isWordSeparator(key.code)) {
+        return if (currentSettings?.isWordSeparator(key.code) == true) {
             mAccessibilityUtils.getAutoCorrectionDescription(
                     keyCodeDescription, shouldObscure)
         } else keyCodeDescription
